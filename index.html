@@ -3,13 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>Payload Manager</title>
+<title>PS5-Relapse</title>
 <style>
 * { box-sizing:border-box; margin:0; padding:0; }
-body { font-family:sans-serif; background:#0a0a0f; color:#e0e0e0; padding:20px; }
-h1 { font-size:1.4rem; margin-bottom:4px; }
+html, body { background:#060606; color:#fff; font-family:sans-serif; }
+
+#panel { padding:20px; }
+#panel h1 { font-size:1.4rem; margin-bottom:4px; }
 .sub { color:#888; font-size:.9rem; margin-bottom:20px; }
-h2 { font-size:1rem; color:#6c5ce7; margin:16px 0 8px; text-transform:uppercase; letter-spacing:1px; }
+#panel h2 { font-size:1rem; color:#6c5ce7; margin:16px 0 8px; text-transform:uppercase; letter-spacing:1px; }
 .card { background:#12121a; border:1px solid #1e1e2e; border-radius:8px; padding:14px 16px; margin-bottom:8px; }
 .row { display:table; width:100%; }
 .left { display:table-cell; vertical-align:middle; }
@@ -20,33 +22,40 @@ h2 { font-size:1rem; color:#6c5ce7; margin:16px 0 8px; text-transform:uppercase;
 .tag-o { background:rgba(108,92,231,.15); color:#6c5ce7; }
 .cb { width:28px; height:28px; cursor:pointer; }
 .lock { color:#555; font-size:.85rem; }
-.btns { margin:16px 0; }
-.btn { display:inline-block; padding:12px 24px; border:none; border-radius:6px; cursor:pointer; font-size:1rem; font-weight:bold; color:#fff; margin:4px 4px 4px 0; }
-.btn-run { background:#00b894; }
 .status { margin:12px 0; padding:10px; background:#12121a; border-radius:6px; font-size:.9rem; }
+.btns { margin:16px 0; }
+.btn { display:inline-block; padding:14px 32px; border:none; border-radius:6px; cursor:pointer; font-size:1.1rem; font-weight:bold; color:#fff; }
+.btn-run { background:#00b894; }
 .note { margin-top:16px; padding:12px; background:#1a1a2e; border:1px solid #2e2e3e; border-radius:6px; font-size:.85rem; color:#888; }
+
+#console { display:none; padding:10px; font-family:monospace; font-size:14px; }
 </style>
 </head>
 <body>
-<h1>Payload Manager</h1>
-<p class="sub">Pilih payload. Toggle disimpan di browser (localStorage).</p>
 
-<h2>Wajib (always on)</h2>
-<div id="mb"></div>
+<div id="panel">
+  <h1>Payload Manager</h1>
+  <p class="sub">Pilih payload lalu tekan Run. Toggle disimpan di browser.</p>
 
-<h2>Optional (pilih)</h2>
-<div id="ob"></div>
+  <h2>Wajib (always on)</h2>
+  <div id="mb"></div>
 
-<div id="st" class="status"></div>
+  <h2>Optional (pilih)</h2>
+  <div id="ob"></div>
 
-<div class="btns">
- <button class="btn btn-run" onclick="run()">Run Exploit</button>
+  <div id="st" class="status"></div>
+
+  <div class="btns">
+    <button class="btn btn-run" onclick="startExploit()">Run Exploit</button>
+  </div>
+
+  <div class="note">
+    <strong>Static mode</strong> — toggle disimpan di localStorage browser PS5.
+    Edit <code>payloads.json</code> untuk tambah/hapus payload.
+  </div>
 </div>
 
-<div class="note">
-  <strong>Static mode</strong> — panel ini jalan tanpa server. Toggle disimpan di localStorage browser PS5.
-  Kalau mau tambah/hapus payload, edit <code>payloads.json</code> lalu push ke GitHub.
-</div>
+<div id="console"></div>
 
 <script>
 var cfg = null;
@@ -63,19 +72,19 @@ function setDisabled(d) {
   try { localStorage.setItem("disabled_payloads", JSON.stringify(d)); } catch(e) {}
 }
 
-function load() {
+function loadPanel() {
   var x = new XMLHttpRequest();
   x.open("GET", "payloads.json", true);
   x.onload = function() {
     if (x.status === 200) {
       cfg = JSON.parse(x.responseText);
-      draw();
+      drawPanel();
     }
   };
   x.send();
 }
 
-function draw() {
+function drawPanel() {
   if (!cfg) return;
   var disabled = getDisabled();
 
@@ -119,14 +128,42 @@ function tog(name, on) {
     d[name] = true;
   }
   setDisabled(d);
-  draw();
+  drawPanel();
 }
 
-function run() {
-  window.location.href = "index.html";
+function startExploit() {
+  document.getElementById("panel").style.display = "none";
+  document.getElementById("console").style.display = "block";
+
+  var queue = [
+    "./src/firmware.js",
+    "./src/main.js",
+    "./src/rop.js",
+    "./src/utils/syscalls.js"
+  ];
+
+  function loadNext(idx) {
+    if (idx >= queue.length) {
+      var fw = document.createElement("script");
+      fw.src = "offsets/" + window.fw_str + ".js?v=" + Date.now();
+      fw.onload = function() {
+        var site = document.createElement("script");
+        site.type = "module";
+        site.src = "./src/site.js";
+        document.body.appendChild(site);
+      };
+      document.body.appendChild(fw);
+      return;
+    }
+    var s = document.createElement("script");
+    s.src = queue[idx];
+    s.onload = function() { loadNext(idx + 1); };
+    document.body.appendChild(s);
+  }
+  loadNext(0);
 }
 
-load();
+loadPanel();
 </script>
 </body>
 </html>
