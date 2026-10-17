@@ -61,12 +61,12 @@ html, body { background:#060606; color:#fff; font-family:sans-serif; }
 
     <div class="btns">
       <button id="jailbreak-run" class="btn btn-run" onclick="startExploit('jailbreak')">Run Jailbreak + elfldr</button>
-      <button id="payload-run" class="btn btn-payload" onclick="startExploit('payloads')">Send Selected Payloads</button>
+      <button id="payload-run" class="btn btn-payload" onclick="startExploit('payloads')">Send Payloads</button>
       <button class="btn btn-back" onclick="showPage('home')">Back</button>
     </div>
 
     <div class="note">
-      Pastikan mode Jailbreak sudah berhasil dan elfldr sudah aktif sebelum mengirim payload.
+      Payload dikirim langsung sebagai bytes ke elfldr, lalu loader menjalankannya.
       <br>Toggle disimpan di localStorage browser PS5.
       Edit <code>payloads.json</code> untuk tambah/hapus payload.
     </div>

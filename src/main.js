@@ -286,10 +286,6 @@ async function main(userlandRW) {
     return;
   }
 
-  if (mode === "payloads") {
-    throw new Error("jailbreak is not active; run Jailbreak first");
-  }
-
   log("main: no existing jailbreak; starting kernel exploit", "info");
   const { runKernelExploit } = await import("./relapse_exploit.js");
   const result = await runKernelExploit(p, chain, log, mode);
