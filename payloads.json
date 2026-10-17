@@ -1,8 +1,8 @@
 {
   "mandatory": [
-    "byepervisor.elf",
     "kstuffw.elf",
-    "shadowmountplus.elf"
+    "shadowmountplus.elf",
+    "byepervisor.elf"
   ],
   "optional": [
     "etaHenw.elf",
