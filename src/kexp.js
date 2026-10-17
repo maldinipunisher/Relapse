@@ -285,6 +285,54 @@ async function sendToLocalElfldr(p, chain, elfData, port, say) {
   }
 }
 
+export async function deliverPayloads(p, chain, log) {
+  const say = typeof log === "function" ? log : () => {};
+
+  say("fetching payload list...");
+  try {
+    var cfgResp = await fetch("payloads.json");
+    if (!cfgResp.ok) throw new Error("payloads.json HTTP " + cfgResp.status);
+    var cfg = await cfgResp.json();
+
+    var disabled = {};
+    try {
+      var raw = localStorage.getItem("disabled_payloads");
+      if (raw) disabled = JSON.parse(raw);
+    } catch (e) {}
+
+    var list = [];
+    for (var m = 0; m < cfg.mandatory.length; m++) list.push(cfg.mandatory[m]);
+    for (var o = 0; o < cfg.optional.length; o++) {
+      if (!disabled[cfg.optional[o]]) list.push(cfg.optional[o]);
+    }
+
+    say("payloads to load: " + list.length);
+    for (var i = 0; i < list.length; i++) {
+      var name = list[i];
+      try {
+        say("downloading " + name + " (" + (i + 1) + "/" + list.length + ")");
+        var resp = await fetch("payloads/" + name);
+        if (!resp.ok) throw new Error("HTTP " + resp.status);
+        var elf = new Uint8Array(await resp.arrayBuffer());
+        say("sending " + name + " (" + elf.length + " bytes) to elfldr");
+        await sendToLocalElfldr(p, chain, elf, 9021, say);
+        say(name + ": loaded OK");
+        if (i < list.length - 1) {
+          say("waiting before next payload...");
+          await new Promise(function(r) { setTimeout(r, 5000); });
+        }
+      } catch (e) {
+        say(name + ": FAILED - " + e);
+      }
+    }
+    say("all payloads processed");
+  } catch (e) {
+    say("payload delivery failed: " + e);
+  }
+
+  return true;
+}
+
 export async function runKexp(krw, p, chain, log) {
   const say = typeof log === "function" ? log : () => {};
   const allprocRva = window.KRW && window.KRW.allproc;
@@ -374,47 +422,5 @@ export async function runKexp(krw, p, chain, log) {
   say("waiting for elfldr to start...");
   await new Promise(function(r) { setTimeout(r, 5000); });
 
-  say("fetching payload list...");
-  try {
-    var cfgResp = await fetch("payloads.json");
-    if (!cfgResp.ok) throw new Error("payloads.json HTTP " + cfgResp.status);
-    var cfg = await cfgResp.json();
-
-    var disabled = {};
-    try {
-      var raw = localStorage.getItem("disabled_payloads");
-      if (raw) disabled = JSON.parse(raw);
-    } catch (e) {}
-
-    var list = [];
-    for (var m = 0; m < cfg.mandatory.length; m++) list.push(cfg.mandatory[m]);
-    for (var o = 0; o < cfg.optional.length; o++) {
-      if (!disabled[cfg.optional[o]]) list.push(cfg.optional[o]);
-    }
-
-    say("payloads to load: " + list.length);
-    for (var i = 0; i < list.length; i++) {
-      var name = list[i];
-      try {
-        say("downloading " + name + " (" + (i + 1) + "/" + list.length + ")");
-        var resp = await fetch("payloads/" + name);
-        if (!resp.ok) throw new Error("HTTP " + resp.status);
-        var elf = new Uint8Array(await resp.arrayBuffer());
-        say("sending " + name + " (" + elf.length + " bytes) to elfldr");
-        await sendToLocalElfldr(p, chain, elf, 9021, say);
-        say(name + ": loaded OK");
-        if (i < list.length - 1) {
-          say("waiting before next payload...");
-          await new Promise(function(r) { setTimeout(r, 5000); });
-        }
-      } catch (e) {
-        say(name + ": FAILED - " + e);
-      }
-    }
-    say("all payloads processed");
-  } catch (e) {
-    say("payload delivery failed: " + e);
-  }
-
-  return true;
+  return deliverPayloads(p, chain, say);
 }
