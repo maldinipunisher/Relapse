@@ -1,6 +1,9 @@
 {
   "mandatory": [],
   "optional": [
+    "kstuffw.elf",
+    "shadowmountplus.elf",
+    "byepervisor.elf",
     "etaHenw.elf",
     "ProsperoMgr.elf",
     "game-compressor.elf",
