@@ -260,6 +260,8 @@ async function prepareRop(p) {
 }
 
 async function main(userlandRW) {
+  const mode = localStorage.getItem("relapse_mode") || "jailbreak";
+  log("main: selected mode " + mode, "info");
   log("main: preparing ROP chain", "info");
   const { p, chain } = await prepareRop(userlandRW);
   log("main: ROP chain ready", "success");
@@ -269,6 +271,9 @@ async function main(userlandRW) {
   log("main: getuid returned " + uid.toString(), "info");
   if (uid.low === 0) {
     log("main: existing jailbreak detected", "success");
+    if (mode === "jailbreak") {
+      throw new Error("jailbreak already active; use Payloads to load ELF files");
+    }
     log("main: importing direct payload loader", "info");
     try {
       const { deliverPayloads } = await import("./kexp.js");
@@ -283,7 +288,7 @@ async function main(userlandRW) {
 
   log("main: no existing jailbreak; starting kernel exploit", "info");
   const { runKernelExploit } = await import("./relapse_exploit.js");
-  const result = await runKernelExploit(p, chain, log);
+  const result = await runKernelExploit(p, chain, log, mode);
   if (!result || !result.done)
     throw new Error("kernel exploit did not finish");
 

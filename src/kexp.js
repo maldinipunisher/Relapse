@@ -333,7 +333,7 @@ export async function deliverPayloads(p, chain, log) {
   return true;
 }
 
-export async function runKexp(krw, p, chain, log) {
+export async function runKexp(krw, p, chain, log, mode) {
   const say = typeof log === "function" ? log : () => {};
   const allprocRva = window.KRW && window.KRW.allproc;
   if (!krw || !krw.ktextBase || !krw.procFdAddr)
@@ -421,6 +421,11 @@ export async function runKexp(krw, p, chain, log) {
 
   say("waiting for elfldr to start...");
   await new Promise(function(r) { setTimeout(r, 5000); });
+
+  if (mode !== "payloads") {
+    say("elfldr started; jailbreak mode complete");
+    return true;
+  }
 
   return deliverPayloads(p, chain, say);
 }

@@ -1,9 +1,5 @@
 {
-  "mandatory": [
-    "kstuffw.elf",
-    "shadowmountplus.elf",
-    "byepervisor.elf"
-  ],
+  "mandatory": [],
   "optional": [
     "etaHenw.elf",
     "ProsperoMgr.elf",
