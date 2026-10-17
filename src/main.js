@@ -266,6 +266,19 @@ async function main(userlandRW) {
   const { p, chain } = await prepareRop(userlandRW);
   log("main: ROP chain ready", "success");
 
+  if (mode === "payloads") {
+    log("main: payload mode; sending selected ELF files directly", "info");
+    try {
+      const { deliverPayloads } = await import("./kexp.js");
+      log("main: direct payload loader imported", "success");
+      const loaded = await deliverPayloads(p, chain, (message) => log("payload: " + message));
+      log("main: direct payload send finished (" + loaded + ")", loaded ? "success" : "error");
+    } catch (error) {
+      log("main: direct payload send error: " + (error && error.stack ? error.stack : String(error)), "error");
+    }
+    return;
+  }
+
   log("main: checking existing jailbreak (getuid)", "info");
   const uid = await chain.syscall(SYS_GETUID);
   log("main: getuid returned " + uid.toString(), "info");
@@ -274,16 +287,7 @@ async function main(userlandRW) {
     if (mode === "jailbreak") {
       throw new Error("jailbreak already active; use Payloads to load ELF files");
     }
-    log("main: importing direct payload loader", "info");
-    try {
-      const { deliverPayloads } = await import("./kexp.js");
-      log("main: direct payload loader imported", "success");
-      const loaded = await deliverPayloads(p, chain, (message) => log("payload: " + message));
-      log("main: direct payload loader finished (" + loaded + ")", loaded ? "success" : "error");
-    } catch (error) {
-      log("main: direct payload loader error: " + (error && error.stack ? error.stack : String(error)), "error");
-    }
-    return;
+    throw new Error("jailbreak already active; select Payloads to send ELF files");
   }
 
   log("main: no existing jailbreak; starting kernel exploit", "info");
