@@ -6,8 +6,6 @@ const MAP_SHARED = 0x1, MAP_PRIVATE_ANON = 0x1002;
 
 const DEFAULT_KEXP = "kexp_2026_05_25.bin";
 const DEFAULT_ELFLDR = "elfldr-ps5-1360.elf";
-const PAYLOAD_BASE_URL = "https://maldinipunisher.github.io/Relapse/payloads/";
-const ELFLDR_URL_ENDPOINT = "http://127.0.0.1:9021/x?uri=";
 
 const SHELLCODE = {
   size: 18912,
@@ -287,26 +285,6 @@ async function sendToLocalElfldr(p, chain, elfData, port, say) {
   }
 }
 
-async function requestRemotePayload(name, say) {
-  const payloadUrl = PAYLOAD_BASE_URL + encodeURIComponent(name);
-  const endpoint = ELFLDR_URL_ENDPOINT + encodeURIComponent(payloadUrl);
-  say("requesting " + name + " from " + payloadUrl);
-
-  const response = await fetch(endpoint, {
-    cache: "no-store",
-    mode: "no-cors",
-  });
-  if (response.type === "opaque") {
-    say("elfldr request dispatched");
-    return;
-  }
-  if (!response.ok)
-    throw new Error("elfldr HTTP " + response.status);
-
-  const result = await response.text();
-  if (result) say("elfldr response: " + result);
-}
-
 export async function deliverPayloads(p, chain, log) {
   const say = typeof log === "function" ? log : () => {};
 
@@ -332,8 +310,12 @@ export async function deliverPayloads(p, chain, log) {
     for (var i = 0; i < list.length; i++) {
       var name = list[i];
       try {
-        say("sending URL for " + name + " (" + (i + 1) + "/" + list.length + ")");
-        await requestRemotePayload(name, say);
+        say("downloading " + name + " (" + (i + 1) + "/" + list.length + ")");
+        var resp = await fetch("payloads/" + name);
+        if (!resp.ok) throw new Error("HTTP " + resp.status);
+        var elf = new Uint8Array(await resp.arrayBuffer());
+        say("sending " + name + " (" + elf.length + " bytes) to elfldr");
+        await sendToLocalElfldr(p, chain, elf, 9021, say);
         say(name + ": loaded OK");
         if (i < list.length - 1) {
           say("waiting before next payload...");
