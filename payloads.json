@@ -1,11 +1,11 @@
 {
   "mandatory": [
+    "byepervisor.elf",
     "kstuffw.elf",
-    "etaHenw.elf",
-    "shadowmountplus.elf",
-    "byepervisor.elf"
+    "shadowmountplus.elf"
   ],
   "optional": [
+    "etaHenw.elf",
     "ProsperoMgr.elf",
     "game-compressor.elf",
     "ps5upload-5.40.0.elf",
