@@ -62,4 +62,7 @@ async function run() {
   await main(primitive);
 }
 
-run().catch((error) => writeLog(error instanceof Error ? error.message : String(error), "error"));
+run().catch((error) => writeLog(
+  error instanceof Error && error.stack ? error.stack : String(error),
+  "error",
+));

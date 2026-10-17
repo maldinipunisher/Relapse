@@ -260,15 +260,28 @@ async function prepareRop(p) {
 }
 
 async function main(userlandRW) {
+  log("main: preparing ROP chain", "info");
   const { p, chain } = await prepareRop(userlandRW);
+  log("main: ROP chain ready", "success");
+
+  log("main: checking existing jailbreak (getuid)", "info");
   const uid = await chain.syscall(SYS_GETUID);
+  log("main: getuid returned " + uid.toString(), "info");
   if (uid.low === 0) {
-    log("existing jailbreak detected; loading payloads directly", "info");
-    const { deliverPayloads } = await import("./kexp.js");
-    await deliverPayloads(p, chain, (message) => log(message));
+    log("main: existing jailbreak detected", "success");
+    log("main: importing direct payload loader", "info");
+    try {
+      const { deliverPayloads } = await import("./kexp.js");
+      log("main: direct payload loader imported", "success");
+      const loaded = await deliverPayloads(p, chain, (message) => log("payload: " + message));
+      log("main: direct payload loader finished (" + loaded + ")", loaded ? "success" : "error");
+    } catch (error) {
+      log("main: direct payload loader error: " + (error && error.stack ? error.stack : String(error)), "error");
+    }
     return;
   }
 
+  log("main: no existing jailbreak; starting kernel exploit", "info");
   const { runKernelExploit } = await import("./relapse_exploit.js");
   const result = await runKernelExploit(p, chain, log);
   if (!result || !result.done)

@@ -28,7 +28,7 @@ html, body { background:#060606; color:#fff; font-family:sans-serif; }
 .btn-run { background:#00b894; }
 .note { margin-top:16px; padding:12px; background:#1a1a2e; border:1px solid #2e2e3e; border-radius:6px; font-size:.85rem; color:#888; }
 
-#console { display:none; padding:10px; font-family:monospace; font-size:14px; }
+#console { display:none; padding:10px; font-family:monospace; font-size:14px; white-space:pre-wrap; overflow-wrap:anywhere; }
 </style>
 </head>
 <body>
@@ -135,6 +135,12 @@ function startExploit() {
   document.getElementById("panel").style.display = "none";
   document.getElementById("console").style.display = "block";
 
+  function showLoadError(name, event) {
+    var consoleEl = document.getElementById("console");
+    var detail = event && event.message ? event.message : "network or script error";
+    consoleEl.textContent += "[-] failed to load " + name + ": " + detail + "\n";
+  }
+
   var queue = [
     "./src/firmware.js",
     "./src/main.js",
@@ -146,10 +152,12 @@ function startExploit() {
     if (idx >= queue.length) {
       var fw = document.createElement("script");
       fw.src = "offsets/" + window.fw_str + ".js?v=" + Date.now();
+      fw.onerror = function(e) { showLoadError(fw.src, e); };
       fw.onload = function() {
         var site = document.createElement("script");
         site.type = "module";
         site.src = "./src/site.js";
+        site.onerror = function(e) { showLoadError(site.src, e); };
         document.body.appendChild(site);
       };
       document.body.appendChild(fw);
@@ -157,6 +165,7 @@ function startExploit() {
     }
     var s = document.createElement("script");
     s.src = queue[idx];
+    s.onerror = function(e) { showLoadError(s.src, e); };
     s.onload = function() { loadNext(idx + 1); };
     document.body.appendChild(s);
   }
