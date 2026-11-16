@@ -165,7 +165,9 @@
 
 <script>
   // Force http on PS5 — mixed content blocks the 127.0.0.1:9021 probe from https
-  if (/PlayStation 5\//.test(navigator.userAgent) && location.protocol === 'https:') {
+  // Skip on github.io: Pages always 301s back to https -> infinite refresh loop on PS5.
+  if (location.hostname.indexOf('github.io') === -1
+      && /PlayStation 5\//.test(navigator.userAgent) && location.protocol === 'https:') {
     location.replace('http://' + location.host + location.pathname);
   }
 

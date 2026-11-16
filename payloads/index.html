@@ -43,7 +43,8 @@ a.btn:active{-webkit-transform:translateY(0);transform:translateY(0)}
 <div id="list"></div>
 <p class="credit">Original exploit &amp; payload list by earthonion, soniciso1 &amp; the PS5 scene — self-hosted mirror for personal use.</p>
 <script>
-if (/PlayStation 5\//.test(navigator.userAgent) && location.protocol === 'https:') location.replace('http://' + location.host + location.pathname);
+if (location.hostname.indexOf('github.io') === -1
+    && /PlayStation 5\//.test(navigator.userAgent) && location.protocol === 'https:') location.replace('http://' + location.host + location.pathname);
 
 var statusEl = document.getElementById('status');
 var listEl = document.getElementById('list');

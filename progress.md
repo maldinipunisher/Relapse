@@ -213,3 +213,9 @@ main.js
   location.pathname.replace) sehingga bekerja di server lokal (root /) DAN Pages (/Relapse/).
   Salinan root Pages disinkronkan. Verified resolve: ../wobkot/ → /Relapse/wobkot/,
   ELF target → /Relapse/payloads/payloads/<file>.
+- 2026-11-16: **Fix redirect loop di PS5 via Pages** — menu relapse & payloads memaksa
+  http saat UA PS5 (untuk mixed-content probe 127.0.0.1:9021), tapi Pages selalu 301
+  balik ke https → infinite refresh di browser PS5. Guard ditambahkan: redirect paksa
+  hanya di host non-github.io (server lokal). Di Pages, halaman tetap https; trade-off:
+  auto-detect loader via fetch 127.0.0.1:9021 bisa diblok mixed content tergantung FW
+  PS5 — tombol jailbreak/payload tetap berfungsi normal.
