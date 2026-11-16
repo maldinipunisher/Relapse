@@ -1,0 +1,16 @@
+# TLS keys — JANGAN commit
+certs/
+
+# Python
+__pycache__/
+*.pyc
+
+# macOS
+.DS_Store
+
+# Editor
+.vscode/
+.idea/
+
+# Server logs / tmp
+*.log
