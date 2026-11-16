@@ -201,3 +201,9 @@ main.js
   (verified HTTP 200, badge 2x di /relapse-menu/). Payload legacy v3-v5 tetap dihapus
   dari repo (untracked di disk); .nojekyll dikembalikan. Pages = HTTPS valid, cocok
   untuk PS5 tanpa self-signed warning; server.py lokal tetap untuk dev/testing.
+- 2026-11-16: **Pages live penuh** — root `/` redirect ke `/relapse-menu/` (meta refresh +
+  JS, karena Pages legacy tidak bisa server-side redirect). Verified live: root 200 (redirect),
+  /relapse-menu/ 200 + badge Self-Host, /payloads/ 200, payload_map.js 200, ELF payload 206
+  (range request OK). Catatan: API pages/builds/latest balik 404 terus (quirk legacy build)
+  — pantau via HTTP check langsung, bukan API. 404 sebelumnya = build legacy belum selesai
+  (repo ~200MB, build makan waktu beberapa menit) + cache CDN edge.
