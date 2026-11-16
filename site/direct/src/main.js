@@ -166,10 +166,10 @@ async function prepareRop(p) {
     p.write1(waddr, 0x0);
   }
 
-  // Resolve relative to THIS script's URL (not the page) so the chain works
-  // both from direct/index.html and from a host page (e.g. payloads/).
-  const workerUrl = new URL("utils/rop_slave.js", document.currentScript ? document.currentScript.src : undefined);
-  const worker = new Worker(workerUrl.href);
+  // Chain base: set by host pages (e.g. payloads/) before loading this script.
+  // PS5 WebKit lacks document.currentScript & URL(base) support — plain concat.
+  const chainBase = window.__CHAIN_BASE || "./src/";
+  const worker = new Worker(chainBase + "utils/rop_slave.js");
 
   async function waitForWorker() {
     return new Promise((resolve, reject) => {
@@ -272,7 +272,7 @@ async function main(userlandRW) {
   if (mode === "payloads") {
     log("main: payload mode; sending selected ELF files directly", "info");
     try {
-      const { deliverPayloads } = await import("./kexp.js");
+      const { deliverPayloads } = await import((window.__CHAIN_BASE || "./src/") + "kexp.js");
       log("main: direct payload loader imported", "success");
       const loaded = await deliverPayloads(p, chain, (message) => log("payload: " + message));
       log("main: direct payload send finished (" + loaded + ")", loaded ? "success" : "error");
@@ -310,7 +310,6 @@ async function main(userlandRW) {
 const fwScript = document.createElement("script");
 document.body.appendChild(fwScript);
 
-// offsets live one directory above src/ — resolve from this script's URL
-const fwUrl = new URL(`../offsets/${window.fw_str}.js?v=` + Date.now(),
-  document.currentScript ? document.currentScript.src : undefined);
-fwScript.setAttribute("src", fwUrl.href);
+// offsets live one directory above src/ (see chainBase note above)
+const fwBase = window.__CHAIN_BASE || "./src/";
+fwScript.setAttribute("src", fwBase + "../offsets/" + window.fw_str + ".js?v=" + Date.now());

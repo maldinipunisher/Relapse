@@ -247,3 +247,10 @@ main.js
 - 2026-11-16: Fix worker/offsets path LIVE di Pages — currentScript resolve terverifikasi
   (2x di main.js), rop_slave.js 200, kexp_2026_05_25.bin & elfldr-ps5-1360.elf 206 di
   /payloads/payloads/. Siap dites ulang di PS5.
+- 2026-11-16: **Fix error PS5 run 2** (stack: main.js 171/92/269/265, site.js 62):
+  PS5 WebKit tidak mendukung document.currentScript → new URL(rel, undefined) throw;
+  dynamic import("./kexp.js") di classic script resolve ke halaman → 404. Fix: global
+  window.__CHAIN_BASE (diset loader payloads = '../direct/src/') + string concat untuk
+  Worker, fwScript offsets, dan import kexp. Loader payloads: hapus load offsets manual
+  (main.js fwScript yang handle — hindari double-load/const redeclare). Pola boot kini
+  identik dengan direct/index.html native.

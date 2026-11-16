@@ -154,6 +154,9 @@ function deliverViaSyscall(payload) {
   conlog('[+] payload: ' + payload.displayTitle);
   conlog('[+] booting exploit chain (direct method)...');
 
+  // chain resolves its own assets from here (PS5 lacks currentScript/URL(base))
+  window.__CHAIN_BASE = '../direct/src/';
+
   var queue = [
     '../direct/src/firmware.js',
     '../direct/src/main.js',
@@ -177,19 +180,17 @@ function deliverViaSyscall(payload) {
         busy = false;
         return;
       }
-      conlog('[+] firmware ' + window.fw_str);
-      loadScript('../direct/offsets/' + window.fw_str + '.js?v=' + Date.now(), function () {
-        import('../direct/src/site.js').catch(function (e) {
-          statusEl.className = 'err';
-          statusEl.textContent = payload.displayTitle + ': ' + e;
-          busy = false;
-        });
-        // site.js run() -> main() -> deliverPayloads(); console logs stream in.
-        // status line follows the first console messages shortly.
-        setTimeout(function () {
-          statusEl.textContent = payload.displayTitle + ': delivering via syscalls — see console.';
-        }, 400);
-      }, function (err) { fail(payload, err); });
+      conlog('[+] firmware ' + window.fw_str + ' — main.js will fetch offsets');
+      // main.js appends offsets/<fw>.js itself (via __CHAIN_BASE), then we boot.
+      // site.js run() -> main() -> deliverPayloads(); logs stream into console.
+      import('../direct/src/site.js').catch(function (e) {
+        statusEl.className = 'err';
+        statusEl.textContent = payload.displayTitle + ': ' + e;
+        busy = false;
+      });
+      setTimeout(function () {
+        statusEl.textContent = payload.displayTitle + ': delivering via syscalls — see console.';
+      }, 400);
       return;
     }
     loadScript(queue[idx], function () { loadNext(idx + 1); }, function (err) { fail(payload, err); });
