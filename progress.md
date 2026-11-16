@@ -284,3 +284,7 @@ main.js
   di-reset di jalur sukses (hanya di fail()), jadi klik berikutnya diabaikan diam-diam.
   Reset kini di __statusHook: 'delivery complete' → busy=false + hint "pick another
   payload"; jalur error → busy=false juga (bisa langsung retry).
+- 2026-11-16: **Auto-reload setelah delivery** — 'delivery complete' → tampil "done ✓ —
+  reloading…" 1.2 detik → location.reload() otomatis. Alasan: delivery kedua di page yang
+  sama berisiko (stale ROP/worker state), jadi langkah back+reload yang manual diotomasi-
+  kan; klik berikutnya selalu di halaman fresh. debug=1 tidak terpengaruh (hook skip).

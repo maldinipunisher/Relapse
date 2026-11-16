@@ -158,8 +158,15 @@ function deliverViaSyscall(payload) {
       statusEl.textContent = payload.displayTitle + ': loaded OK ✓';
     }
     else if (/delivery complete/.test(m)) {
-      statusEl.textContent = payload.displayTitle + ': done ✓ — pick another payload';
-      busy = false; // done: allow next delivery without leaving the page
+      statusEl.className = 'ok';
+      statusEl.textContent = payload.displayTitle + ': done ✓ — reloading…';
+      busy = false;
+      // Auto-reload: in-page second delivery risks stale ROP/worker state,
+      // so automate the back+reload step — next click starts fresh.
+      if (!window.__reload_scheduled) {
+        window.__reload_scheduled = true;
+        setTimeout(function () { location.reload(); }, 1200);
+      }
     }
     else if (/^(fetching|sending)/.test(m)) statusEl.textContent = payload.displayTitle + ': ' + m;
   };
