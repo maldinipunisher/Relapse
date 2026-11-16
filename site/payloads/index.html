@@ -67,6 +67,7 @@ var overlayEl = document.getElementById('overlay');
 var m = navigator.userAgent.match(/PlayStation 5\/([\d.]+)/);
 var fw = m ? m[1] : null;
 var busy = false;
+var deliverTargetName = null;
 
 fetch('payload_map.js', {cache: 'no-store'})
   .then(function (r) {
@@ -124,23 +125,8 @@ fetch('payload_map.js', {cache: 'no-store'})
    socket syscall — immune to https mixed-content policy. */
 
 function deliverViaSyscall(payload) {
-  // selection: everything disabled except the clicked payload
-  var allNames = [];
-  var disabledMap = {};
-  try {
-    var src = new Function(window.__map_src + '; return payload_map;')();
-    for (var k = 0; k < src.length; k++) {
-      if (src[k] && src[k].fileName && !src[k].customAction) {
-        allNames.push(src[k].fileName);
-        disabledMap[src[k].fileName] = true;
-      }
-    }
-  } catch (e) {}
-  delete disabledMap[payload.fileName];
-  try {
-    // deliverPayloads reads this to build its send list (all except clicked)
-    localStorage.setItem('disabled_payloads', JSON.stringify(disabledMap));
-  } catch (e) {}
+  // deliverOne targets exactly the clicked payload — no list/localStorage involved
+  deliverTargetName = payload.fileName;
 
   overlayEl.style.display = '-webkit-flex';
   overlayEl.style.display = 'flex';
@@ -204,11 +190,13 @@ function bootDeliveryModule() {
   // Inline module: static imports resolve relative to THIS PAGE (document base
   // for inline modules) — /payloads/../direct/src/... works on / and /Relapse/.
   // PS5 WebKit proven path: module static imports (same as native site.js).
-  // main() bypassed: only webkit primitive + prepareRop + deliverPayloads run.
+  // main() bypassed: only webkit primitive + prepareRop + deliverOne run.
+  // NOTE: deliverOne(file) sends exactly ONE payload — the clicked one.
+  window.__deliver_target = deliverTargetName;
   var src = [
     'import { establishPrimitive } from "../direct/src/webkit.js";',
     'import { installWindowP } from "../direct/src/utils/mem.js";',
-    'import { deliverPayloads } from "../direct/src/kexp.js";',
+    'import { deliverOne } from "../direct/src/kexp.js";',
     '',
     'const output = document.getElementById("console");',
     'function writeLog(message, type = "log", replace = false) {',
@@ -235,8 +223,10 @@ function bootDeliveryModule() {
     '  // prepareRop is a global from main.js (classic) — ROP setup only, no kernel exploit',
     '  const { p, chain } = await prepareRop(primitive);',
     '  writeLog("ROP chain ready", "success");',
-    '  const loaded = await deliverPayloads(p, chain, (m) => writeLog("payload: " + m));',
-    '  writeLog("payload send finished (" + loaded + ")", loaded ? "success" : "error");',
+    '  const target = window.__deliver_target;',
+    '  writeLog("selected payload: " + target, "info");',
+    '  await deliverOne(p, chain, target, (m) => writeLog("payload: " + m));',
+    '  writeLog("delivery complete", "success");',
     '}',
     '',
     'run().catch((e) => writeLog(e instanceof Error && e.stack ? e.stack : String(e), "error"));'

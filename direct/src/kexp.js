@@ -285,6 +285,22 @@ async function sendToLocalElfldr(p, chain, elfData, port, say) {
   }
 }
 
+// Deliver exactly ONE payload (host pages call this per user selection).
+// Unlike deliverPayloads, no payloads.json / localStorage involved.
+export async function deliverOne(p, chain, name, log) {
+  const say = typeof log === "function" ? log : () => {};
+
+  say("fetching " + name + "...");
+  const resp = await fetch("payloads/" + name);
+  if (!resp.ok) throw new Error("HTTP " + resp.status);
+  const elf = new Uint8Array(await resp.arrayBuffer());
+
+  say("sending " + name + " (" + elf.length + " bytes) to elfldr");
+  await sendToLocalElfldr(p, chain, elf, 9021, say);
+  say(name + ": loaded OK");
+  return true;
+}
+
 export async function deliverPayloads(p, chain, log) {
   const say = typeof log === "function" ? log : () => {};
 

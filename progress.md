@@ -262,3 +262,11 @@ main.js
   tunggu offsets via polling OFFSET global, lalu primitive → prepareRop (ROP setup
   saja) → deliverPayloads. main() TIDAK dipanggil → tidak ada exploit berjalan ulang.
   relapse_mode localStorage tidak dipakai lagi (disabled_payloads tetap untuk list).
+- 2026-11-16: **Fix "kirim banyak"** — deliverPayloads membangun list dari payloads.json +
+  disabled_payloads localStorage; builder disabled-map di halaman payloads bisa gagal
+  silently → disabled kosong → SEMUA optional terkirim. Solusi radikal sesuai UX yang
+  benar (1 klik = 1 payload): kexp.js dapat export baru deliverOne(p, chain, name, log)
+  (fetch ELF tunggal + sendToLocalElfldr, tanpa payloads.json/localStorage); halaman
+  payloads: hapus builder disabled-map & set disabled_payloads (dikosongkan utk kebersihan),
+  module inline kini import deliverOne dan target = payload.fileName via
+  window.__deliver_target. deliverPayloads tetap untuk direct/ native UI (checkbox).
