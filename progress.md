@@ -239,3 +239,8 @@ main.js
   payloads.json (49 entri) di-generate dari merged map: statis utk Pages + auto
   oleh server.py saat sync. direct/ tetap di repo sebagai engine source (tidak
   di-link dari menu).
+- 2026-11-16: **Fix "berhenti di tengah" (main.js:174)** — Worker("./src/utils/rop_slave.js")
+  di main.js resolve relatif ke HALAMAN (/payloads/src/... → 404 → "Worker failed to load").
+  Fix: resolve dari document.currentScript.src (new URL) untuk Worker + fwScript offsets,
+  bekerja dari halaman mana pun. Juga: kexp_2026_05_25.bin + elfldr-ps5-1360.elf (di-fetch
+  chain kernel sebelum delivery) dicopy ke payloads/payloads/. Ter-push.

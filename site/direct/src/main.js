@@ -166,7 +166,10 @@ async function prepareRop(p) {
     p.write1(waddr, 0x0);
   }
 
-  const worker = new Worker("./src/utils/rop_slave.js");
+  // Resolve relative to THIS script's URL (not the page) so the chain works
+  // both from direct/index.html and from a host page (e.g. payloads/).
+  const workerUrl = new URL("utils/rop_slave.js", document.currentScript ? document.currentScript.src : undefined);
+  const worker = new Worker(workerUrl.href);
 
   async function waitForWorker() {
     return new Promise((resolve, reject) => {
@@ -307,4 +310,7 @@ async function main(userlandRW) {
 const fwScript = document.createElement("script");
 document.body.appendChild(fwScript);
 
-fwScript.setAttribute("src", `offsets/${window.fw_str}.js?v=` + Date.now());
+// offsets live one directory above src/ — resolve from this script's URL
+const fwUrl = new URL(`../offsets/${window.fw_str}.js?v=` + Date.now(),
+  document.currentScript ? document.currentScript.src : undefined);
+fwScript.setAttribute("src", fwUrl.href);
