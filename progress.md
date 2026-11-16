@@ -174,6 +174,8 @@ main.js
   masuk history). Isi repo final: README.md, server.py, site/, tools/, progress.md.
   Catatan: kalau GitHub Pages repo ini masih aktif, sekarang tidak ada index.html di root
   → Pages 404; aktifkan kembali dengan meng-commit ulang file legacy bila mau restore.
+- 2026-11-16: UI dibedakan dari upstream — badge "Self-Host" (hijau) + baris credit
+  (earthonion, soniciso1 & PS5 scene) di /relapse-menu/ dan /payloads/. Ter-push ke GitHub.
 
 - 2026-11-16: Initial inspect (menu, payloads, wobkot chain) selesai; semua JS + binary
   PS5 di-clone ke `site/`; analisis tahap-1 (relapse.js, impl.js, struktur) didokumentasikan di atas.
