@@ -272,3 +272,11 @@ main.js
   window.__deliver_target. deliverPayloads tetap untuk direct/ native UI (checkbox).
 - 2026-11-16: deliverOne() live-verified di Pages (export ada, dipakai payloads,
   builder disabled-map 0). Commit 8345b10. Menunggu tes PS5: 1 klik = 1 payload.
+- 2026-11-16: **Quiet delivery** — kirim payload jalan di background tanpa overlay console;
+  progres via status bar ("booting chain… → chain ready — sending payload… → loaded OK ✓
+  → done ✓"). Console overlay hanya: (a) otomatis terbuka saat error (log lengkap
+  tersedia), atau (b) ?debug=1 pada URL untuk mode live-console. writeLog module kini
+  memanggil window.__statusHook. Catatan desain: WebKit exploit (ARW) TETAP harus jalan
+  untuk kirim payload via https — socket syscall butuh ARW primitive, dan halaman
+  reload kehilangan state; yang dihilangkan hanyalah tampilannya (dan kernel exploit
+  memang sudah tidak pernah jalan di jalur ini).

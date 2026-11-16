@@ -128,8 +128,37 @@ function deliverViaSyscall(payload) {
   // deliverOne targets exactly the clicked payload — no list/localStorage involved
   deliverTargetName = payload.fileName;
 
-  overlayEl.style.display = '-webkit-flex';
-  overlayEl.style.display = 'flex';
+  // quiet mode (default): run in background, progress in the status bar.
+  // console overlay only on failure, or add ?debug=1 to watch live.
+  var debugMode = location.search.indexOf('debug=1') !== -1;
+  window.__delivery_debug = debugMode;
+  if (debugMode) {
+    overlayEl.style.display = '-webkit-flex';
+    overlayEl.style.display = 'flex';
+  }
+  statusEl.className = '';
+  statusEl.textContent = payload.displayTitle + ': booting chain…';
+
+  // background progress hook — module writeLog() calls this per line
+  window.__statusHook = function (msg, type) {
+    if (debugMode) return; // overlay already shows everything
+    var m = String(msg);
+    if (type === 'error') {
+      statusEl.className = 'err';
+      statusEl.textContent = payload.displayTitle + ': failed — opening console…';
+      overlayEl.style.display = '-webkit-flex';
+      overlayEl.style.display = 'flex';
+      return;
+    }
+    // show only the meaningful milestones in the status bar
+    if (/ARW ready/.test(m)) statusEl.textContent = payload.displayTitle + ': chain ready — sending payload…';
+    else if (/loaded OK/.test(m)) {
+      statusEl.className = 'ok';
+      statusEl.textContent = payload.displayTitle + ': loaded OK ✓';
+    }
+    else if (/delivery complete/.test(m)) statusEl.textContent = payload.displayTitle + ': done ✓';
+    else if (/^(fetching|sending)/.test(m)) statusEl.textContent = payload.displayTitle + ': ' + m;
+  };
 
   function conlog(msg) {
     if (typeof window.writeLog === 'function') { window.writeLog(msg); return; }
@@ -205,6 +234,7 @@ function bootDeliveryModule() {
     '  const marker = type === "error" ? "-" : (type === "log" ? "*" : "+");',
     '  line.textContent = "[" + marker + "] " + message;',
     '  output.scrollTop = output.scrollHeight;',
+    '  if (window.__statusHook) window.__statusHook(message, type);',
     '}',
     'function writeEvent(name, detail, type) {',
     '  writeLog(detail == null || detail === "" ? name : name + ": " + detail,',
