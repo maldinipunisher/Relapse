@@ -280,3 +280,7 @@ main.js
   untuk kirim payload via https — socket syscall butuh ARW primitive, dan halaman
   reload kehilangan state; yang dihilangkan hanyalah tampilannya (dan kernel exploit
   memang sudah tidak pernah jalan di jalur ini).
+- 2026-11-16: **Fix harus back dulu untuk payload berikutnya** — flag `busy` tidak pernah
+  di-reset di jalur sukses (hanya di fail()), jadi klik berikutnya diabaikan diam-diam.
+  Reset kini di __statusHook: 'delivery complete' → busy=false + hint "pick another
+  payload"; jalur error → busy=false juga (bisa langsung retry).

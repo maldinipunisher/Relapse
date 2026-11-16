@@ -148,6 +148,7 @@ function deliverViaSyscall(payload) {
       statusEl.textContent = payload.displayTitle + ': failed — opening console…';
       overlayEl.style.display = '-webkit-flex';
       overlayEl.style.display = 'flex';
+      busy = false; // unlock so the next click can retry immediately
       return;
     }
     // show only the meaningful milestones in the status bar
@@ -156,7 +157,10 @@ function deliverViaSyscall(payload) {
       statusEl.className = 'ok';
       statusEl.textContent = payload.displayTitle + ': loaded OK ✓';
     }
-    else if (/delivery complete/.test(m)) statusEl.textContent = payload.displayTitle + ': done ✓';
+    else if (/delivery complete/.test(m)) {
+      statusEl.textContent = payload.displayTitle + ': done ✓ — pick another payload';
+      busy = false; // done: allow next delivery without leaving the page
+    }
     else if (/^(fetching|sending)/.test(m)) statusEl.textContent = payload.displayTitle + ': ' + m;
   };
 
