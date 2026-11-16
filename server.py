@@ -17,6 +17,7 @@ Catatan PS5:
 """
 
 import functools
+import json
 import os
 import re
 import socket
@@ -98,6 +99,18 @@ def sync_payloads(force=False):
     with open(tmp, "w", encoding="utf-8") as f:
         f.write(merged)
     os.replace(tmp, MAP_CACHE)
+
+    # generate payloads.json (untuk deliverPayloads metode direct) dari merged map
+    map_names = [n for n in re.findall(r'fileName:\s*"([^"]*)"', merged) if n]
+    seen, ordered = set(), []
+    for n in map_names:
+        if n not in seen:
+            seen.add(n)
+            ordered.append(n)
+    pj = os.path.join(PAYLOADS_DIR, "payloads.json")
+    with open(pj + ".tmp", "w") as f:
+        json.dump({"mandatory": [], "optional": ordered}, f, indent=2)
+    os.replace(pj + ".tmp", pj)
 
     # download payload yang belum ada secara lokal
     names = {n for n in re.findall(r'fileName:\s*"([^"]*)"', src) if n}

@@ -27,6 +27,12 @@ a.btn:active{-webkit-transform:translateY(0);transform:translateY(0)}
 .nojs .path{color:#e8e8ec;font-size:.85em;margin-top:.75em}
 .selfhost-badge{display:inline-block;padding:.3em .8em;border:1px solid #34d399;border-radius:999px;color:#34d399;font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;vertical-align:middle;margin-left:10px}
 .credit{color:#46464f;font-size:11px;letter-spacing:.02em;line-height:1.6;margin:18px 0 8px;text-align:center}
+/* console overlay untuk delivery via syscall */
+#overlay{position:fixed;inset:0;background:#0a0a0c;z-index:10;display:none;-webkit-flex-direction:column;flex-direction:column;padding:16px}
+#overlay .obar{display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;gap:10px;margin-bottom:10px}
+#overlay .obar .ot{font-size:14px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+#overlay .obar a{margin-left:auto;color:#7c6aef;font-size:13px;text-decoration:none;border:1px solid #1e1e24;border-radius:8px;padding:6px 12px}
+#console{width:100%;-webkit-flex:1;flex:1;margin:0;padding:16px;font-size:12px;overflow:auto;box-sizing:border-box;font-family:'Lucida Console','Courier New','Menlo';background:#131416;color:#c1c2c5;border-radius:10px;border:1px solid #1e1e24}
 </style>
 </head>
 <body>
@@ -38,18 +44,29 @@ a.btn:active{-webkit-transform:translateY(0);transform:translateY(0)}
   </div>
 </noscript>
 <h1>Payloads <span class="selfhost-badge">Self-Host</span></h1>
-<p class="sub">Finish the exploit first (elfldr must be listening on port 9021). Clicking a payload tells the loader on this console to pull it from this server.</p>
+<p class="sub">Clicking a payload runs the exploit in this page, fetches the ELF from this server, and loads it into the console via in-process syscalls (works on https &mdash; no mixed-content block). Requires the jailbreak to have run once since boot so elfldr is listening on 9021.</p>
 <div id="status">loading payload list…</div>
 <div id="list"></div>
-<p class="credit">Original exploit &amp; payload list by earthonion, soniciso1 &amp; the PS5 scene — self-hosted mirror for personal use.</p>
+<p class="credit">Original exploit &amp; payload list by earthonion, soniciso1 &amp; the PS5 scene — self-hosted mirror for personal use. Delivery engine: direct chain (site.js/kexp.js) by the same scene authors.</p>
+
+<div id="overlay">
+  <div class="obar">
+    <span class="ot">Payload Delivery</span>
+    <a href="#" onclick="location.reload();return false;">&#10226; payloads</a>
+  </div>
+  <pre id="console"></pre>
+</div>
+
 <script>
 if (location.hostname.indexOf('github.io') === -1
     && /PlayStation 5\//.test(navigator.userAgent) && location.protocol === 'https:') location.replace('http://' + location.host + location.pathname);
 
 var statusEl = document.getElementById('status');
 var listEl = document.getElementById('list');
+var overlayEl = document.getElementById('overlay');
 var m = navigator.userAgent.match(/PlayStation 5\/([\d.]+)/);
 var fw = m ? m[1] : null;
+var busy = false;
 
 fetch('payload_map.js', {cache: 'no-store'})
   .then(function (r) {
@@ -57,6 +74,7 @@ fetch('payload_map.js', {cache: 'no-store'})
     return r.text();
   })
   .then(function (src) {
+    window.__map_src = src;
     var payload_map = new Function(src + '; return payload_map;')();
     if (!payload_map) throw new Error('map did not define payload_map');
 
@@ -81,25 +99,12 @@ fetch('payload_map.js', {cache: 'no-store'})
         b.appendChild(t); b.appendChild(d); b.appendChild(i);
         function send(ev) {
           if (ev && ev.preventDefault) ev.preventDefault();
+          if (busy) return;
+          busy = true;
           b.className = 'btn';
           statusEl.className = '';
-          statusEl.textContent = p.displayTitle + ': sending…';
-          var target = 'http://' + location.host + location.pathname.replace(/\/[^/]*$/, '/') + 'payloads/' + encodeURIComponent(p.fileName);
-          fetch('http://127.0.0.1:9021/x?uri=' + encodeURIComponent(target),
-                {mode: 'no-cors', cache: 'no-store'})
-            .then(function () {
-              b.className = 'btn sent';
-              statusEl.textContent = p.displayTitle + ': sent — if it does not start, the exploit may not be finished.';
-            })
-            .catch(function (e) {
-              b.className = 'btn err';
-              statusEl.className = 'err';
-              if (location.protocol === 'https:') {
-                statusEl.textContent = p.displayTitle + ': https page cannot reach 127.0.0.1:9021 (mixed content) — send payloads from the local server (http) instead.';
-              } else {
-                statusEl.textContent = p.displayTitle + ': failed (' + e + ') — run the exploit first.';
-              }
-            });
+          statusEl.textContent = p.displayTitle + ': preparing exploit chain…';
+          deliverViaSyscall(p);
         }
         b.addEventListener('click', send);
         b.addEventListener('keydown', function (ev) { if (ev.key === 'Enter' || ev.key === ' ') send(ev); });
@@ -111,6 +116,93 @@ fetch('payload_map.js', {cache: 'no-store'})
     statusEl.className = 'err';
     statusEl.textContent = 'failed to load payload list: ' + e;
   });
+
+/* ---------- delivery via in-process syscalls (direct-chain method) ---------- */
+/* Boot the direct exploit chain (webkit ARW -> ROP syscalls), mark ONLY the
+   clicked payload as enabled, then let kexp.js deliverPayloads() fetch it
+   same-origin from this server and push the bytes to elfldr over a raw
+   socket syscall — immune to https mixed-content policy. */
+
+function deliverViaSyscall(payload) {
+  // selection: everything disabled except the clicked payload
+  var allNames = [];
+  var disabledMap = {};
+  try {
+    var src = new Function(window.__map_src + '; return payload_map;')();
+    for (var k = 0; k < src.length; k++) {
+      if (src[k] && src[k].fileName && !src[k].customAction) {
+        allNames.push(src[k].fileName);
+        disabledMap[src[k].fileName] = true;
+      }
+    }
+  } catch (e) {}
+  delete disabledMap[payload.fileName];
+  try {
+    localStorage.setItem('relapse_mode', 'payloads');
+    localStorage.setItem('disabled_payloads', JSON.stringify(disabledMap));
+  } catch (e) {}
+
+  overlayEl.style.display = '-webkit-flex';
+  overlayEl.style.display = 'flex';
+
+  function conlog(msg) {
+    if (typeof window.writeLog === 'function') { window.writeLog(msg); return; }
+    var c = document.getElementById('console');
+    c.textContent += msg + '\n';
+    c.scrollTop = c.scrollHeight;
+  }
+  conlog('[+] payload: ' + payload.displayTitle);
+  conlog('[+] booting exploit chain (direct method)...');
+
+  var queue = [
+    '../direct/src/firmware.js',
+    '../direct/src/main.js',
+    '../direct/src/rop.js',
+    '../direct/src/utils/syscalls.js'
+  ];
+
+  function loadScript(src, onload, onerror) {
+    var s = document.createElement('script');
+    s.src = src;
+    s.onload = onload;
+    s.onerror = function () { onerror(new Error('failed to load ' + src)); };
+    document.head.appendChild(s);
+  }
+
+  function loadNext(idx) {
+    if (idx >= queue.length) {
+      if (!window.fw_str) {
+        statusEl.className = 'err';
+        statusEl.textContent = payload.displayTitle + ': firmware not detected.';
+        busy = false;
+        return;
+      }
+      conlog('[+] firmware ' + window.fw_str);
+      loadScript('../direct/offsets/' + window.fw_str + '.js?v=' + Date.now(), function () {
+        import('../direct/src/site.js').catch(function (e) {
+          statusEl.className = 'err';
+          statusEl.textContent = payload.displayTitle + ': ' + e;
+          busy = false;
+        });
+        // site.js run() -> main() -> deliverPayloads(); console logs stream in.
+        // status line follows the first console messages shortly.
+        setTimeout(function () {
+          statusEl.textContent = payload.displayTitle + ': delivering via syscalls — see console.';
+        }, 400);
+      }, function (err) { fail(payload, err); });
+      return;
+    }
+    loadScript(queue[idx], function () { loadNext(idx + 1); }, function (err) { fail(payload, err); });
+  }
+  loadNext(0);
+}
+
+function fail(payload, err) {
+  overlayEl.style.display = 'none';
+  statusEl.className = 'err';
+  statusEl.textContent = payload.displayTitle + ': ' + (err && err.message ? err.message : err);
+  busy = false;
+}
 
   // Controller/keyboard nav
   (function () {

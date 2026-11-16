@@ -508,6 +508,26 @@ payload_map.push({
     toPort: 9021
 });
 payload_map.push({
+    displayTitle: "Relapse Installer (LAN)",
+    description: "Home screen app (webview-style) — opens the local Mac server via raw IP (no DNS needed pre-jailbreak).",
+    fileName: "relapse-install-lan.elf",
+    author: "earthonion (patched local)",
+    projectSource: "https://github.com/earthonion/np-fake-signin",
+    binarySource: "patched from relapse-install.elf (deeplinkUri -> http://192.168.100.10/relapse-menu/, titleId RLPS10011)",
+    version: "1.0-lan",
+    toPort: 9021
+});
+payload_map.push({
+    displayTitle: "Relapse Direct (LAN)",
+    description: "Home screen app that runs the exploit directly from the local Mac server via raw IP (no DNS needed).",
+    fileName: "relapse-direct-install-lan.elf",
+    author: "earthonion (patched local)",
+    projectSource: "https://github.com/earthonion/np-fake-signin",
+    binarySource: "patched from relapse-direct-install.elf (deeplinkUri -> http://192.168.100.10/wobkot/, titleId RLPS10012)",
+    version: "1.0-lan",
+    toPort: 9021
+});
+payload_map.push({
     displayTitle: "YouTube Adblock",
     description: "Ad-blocker payload for the YouTube app. YT Adblocker v0.01.",
     fileName: "yt-adblock.elf",

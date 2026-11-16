@@ -229,3 +229,13 @@ main.js
   payloads/etaHEN.elf 206 (range OK). payloads.json = 13 optional (termasuk nanodns +
   yt-adblock). Local test 8820 juga pass. Alur final PS5: Pages → Jailbreak →
   Payloads (HTTPS) → /direct/ → RUN (syscall delivery, tanpa Mac).
+- 2026-11-16: **Metode syscall diterapkan ke /payloads/** (bukan menu baru — tombol
+  direct dihapus dari relapse-menu). Halaman /payloads/ tetap: grid payload_map.js
+  (49 entri, badge, controller nav), tapi klik payload sekarang boot direct-chain
+  (../direct/src/{firmware,main,rop,syscalls}.js + offsets/<fw>.js + site.js module)
+  lalu kexp.js deliverPayloads meng-fetch ELF same-origin dan push ke elfldr via
+  syscall mentah (SYS_SOCKET/CONNECT/WRITE) — bekerja di https Pages. Seleksi:
+  localStorage disabled_payloads = semua kecuali yang diklik; mode=payloads.
+  payloads.json (49 entri) di-generate dari merged map: statis utk Pages + auto
+  oleh server.py saat sync. direct/ tetap di repo sebagai engine source (tidak
+  di-link dari menu).
