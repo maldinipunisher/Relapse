@@ -225,3 +225,7 @@ main.js
   payloads: pesan error jujur saat https (mixed content → pakai server lokal untuk kirim).
   Realita: pengiriman ELF ke elfldr (127.0.0.1:9021) dari halaman https memang tidak bisa;
   untuk kirim payload tetap pakai http server lokal Mac. Pages = jailbreak + browse; lokal = full.
+- 2026-11-16: **direct/ live di Pages** — verified: /direct/ 200, src/main.js 200,
+  payloads/etaHEN.elf 206 (range OK). payloads.json = 13 optional (termasuk nanodns +
+  yt-adblock). Local test 8820 juga pass. Alur final PS5: Pages → Jailbreak →
+  Payloads (HTTPS) → /direct/ → RUN (syscall delivery, tanpa Mac).
