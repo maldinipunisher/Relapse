@@ -244,3 +244,6 @@ main.js
   Fix: resolve dari document.currentScript.src (new URL) untuk Worker + fwScript offsets,
   bekerja dari halaman mana pun. Juga: kexp_2026_05_25.bin + elfldr-ps5-1360.elf (di-fetch
   chain kernel sebelum delivery) dicopy ke payloads/payloads/. Ter-push.
+- 2026-11-16: Fix worker/offsets path LIVE di Pages — currentScript resolve terverifikasi
+  (2x di main.js), rop_slave.js 200, kexp_2026_05_25.bin & elfldr-ps5-1360.elf 206 di
+  /payloads/payloads/. Siap dites ulang di PS5.
