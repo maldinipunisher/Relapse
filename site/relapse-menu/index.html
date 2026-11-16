@@ -101,6 +101,17 @@
   }
   .nojs strong { display: block; font-size: 1.2em; margin-bottom: 0.5em; }
   .nojs .path { color: #e8e8ec; font-size: 0.85em; margin-top: 0.75em; }
+  .selfhost-badge {
+    display: inline-block; padding: 0.25em 0.75em;
+    border: 1px solid #34d399; border-radius: 999px;
+    color: #34d399; font-size: 0.65em; font-weight: 600;
+    letter-spacing: 0.14em; text-transform: uppercase;
+  }
+  .credit {
+    font-size: 0.62em; color: #46464f; letter-spacing: 0.02em;
+    text-align: center; line-height: 1.6; max-width: 340px;
+  }
+  .credit a { color: #6b6b78; text-decoration: none; }
 </style>
 </head>
 <body>
@@ -112,6 +123,7 @@
     </div>
   </noscript>
   <div class="wrap">
+    <span class="selfhost-badge">Self-Host</span>
     <span class="sub" id="tagline">Play has limits.</span>
 
     <div class="actions">
@@ -142,8 +154,14 @@
       </a>
     </div>
 
-    <div id="st"></div>
-  </div>
+      <div id="st"></div>
+
+      <p class="credit">
+        Original exploit &amp; host by <a href="https://git.etawen.dev/earthonion">earthonion</a>,
+        soniciso1 &amp; the PS5 scene. This is a self-hosted mirror for personal use.<br>
+        Chain: Relapse (AIO UAF + AF_ROUTE leak) · FW 7.00&ndash;13.60
+      </p>
+    </div>
 
 <script>
   // Force http on PS5 — mixed content blocks the 127.0.0.1:9021 probe from https

@@ -25,6 +25,8 @@ a.btn:active{-webkit-transform:translateY(0);transform:translateY(0)}
 .nojs{text-align:center;padding:2em 1.5em;color:#f87171;font-size:1em;line-height:1.6}
 .nojs strong{display:block;font-size:1.2em;margin-bottom:.5em}
 .nojs .path{color:#e8e8ec;font-size:.85em;margin-top:.75em}
+.selfhost-badge{display:inline-block;padding:.3em .8em;border:1px solid #34d399;border-radius:999px;color:#34d399;font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;vertical-align:middle;margin-left:10px}
+.credit{color:#46464f;font-size:11px;letter-spacing:.02em;line-height:1.6;margin:18px 0 8px;text-align:center}
 </style>
 </head>
 <body>
@@ -35,10 +37,11 @@ a.btn:active{-webkit-transform:translateY(0);transform:translateY(0)}
     <div class="path">Settings &rarr; System &rarr; Web Browser &rarr; JavaScript &rarr; On</div>
   </div>
 </noscript>
-<h1>Payloads</h1>
+<h1>Payloads <span class="selfhost-badge">Self-Host</span></h1>
 <p class="sub">Finish the exploit first (elfldr must be listening on port 9021). Clicking a payload tells the loader on this console to pull it from this server.</p>
 <div id="status">loading payload list…</div>
 <div id="list"></div>
+<p class="credit">Original exploit &amp; payload list by earthonion, soniciso1 &amp; the PS5 scene — self-hosted mirror for personal use.</p>
 <script>
 if (/PlayStation 5\//.test(navigator.userAgent) && location.protocol === 'https:') location.replace('http://' + location.host + location.pathname);
 
