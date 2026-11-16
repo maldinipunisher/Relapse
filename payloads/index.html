@@ -138,7 +138,7 @@ function deliverViaSyscall(payload) {
   } catch (e) {}
   delete disabledMap[payload.fileName];
   try {
-    localStorage.setItem('relapse_mode', 'payloads');
+    // deliverPayloads reads this to build its send list (all except clicked)
     localStorage.setItem('disabled_payloads', JSON.stringify(disabledMap));
   } catch (e) {}
 
@@ -180,22 +180,76 @@ function deliverViaSyscall(payload) {
         busy = false;
         return;
       }
-      conlog('[+] firmware ' + window.fw_str + ' — main.js will fetch offsets');
-      // main.js appends offsets/<fw>.js itself (via __CHAIN_BASE), then we boot.
-      // site.js run() -> main() -> deliverPayloads(); logs stream into console.
-      import('../direct/src/site.js').catch(function (e) {
-        statusEl.className = 'err';
-        statusEl.textContent = payload.displayTitle + ': ' + e;
-        busy = false;
-      });
-      setTimeout(function () {
-        statusEl.textContent = payload.displayTitle + ': delivering via syscalls — see console.';
-      }, 400);
+      conlog('[+] firmware ' + window.fw_str + ' — waiting for offsets (main.js fwScript)...');
+      // main.js appends offsets/<fw>.js itself. Wait until its globals exist,
+      // then boot a small inline MODULE that statically imports kexp.js and
+      // runs delivery directly — main() is never called, so no exploit re-runs.
+      (function waitOffsets() {
+        var ready = false;
+        try {
+          ready = new Function("return typeof OFFSET_wk_host_constructor_candidates !== 'undefined';")();
+        } catch (e) {}
+        if (!ready) { setTimeout(waitOffsets, 100); return; }
+        conlog('[+] offsets ready — starting delivery engine');
+        bootDeliveryModule();
+      })();
       return;
     }
     loadScript(queue[idx], function () { loadNext(idx + 1); }, function (err) { fail(payload, err); });
   }
   loadNext(0);
+}
+
+function bootDeliveryModule() {
+  // Inline module: static imports resolve relative to THIS PAGE (document base
+  // for inline modules) — /payloads/../direct/src/... works on / and /Relapse/.
+  // PS5 WebKit proven path: module static imports (same as native site.js).
+  // main() bypassed: only webkit primitive + prepareRop + deliverPayloads run.
+  var src = [
+    'import { establishPrimitive } from "../direct/src/webkit.js";',
+    'import { installWindowP } from "../direct/src/utils/mem.js";',
+    'import { deliverPayloads } from "../direct/src/kexp.js";',
+    '',
+    'const output = document.getElementById("console");',
+    'function writeLog(message, type = "log", replace = false) {',
+    '  let line = replace ? output.lastElementChild : null;',
+    '  if (!line) { line = document.createElement("div"); output.appendChild(line); }',
+    '  const marker = type === "error" ? "-" : (type === "log" ? "*" : "+");',
+    '  line.textContent = "[" + marker + "] " + message;',
+    '  output.scrollTop = output.scrollHeight;',
+    '}',
+    'function writeEvent(name, detail, type) {',
+    '  writeLog(detail == null || detail === "" ? name : name + ": " + detail,',
+    '    type || (name === "Failed" ? "error" : "log"));',
+    '}',
+    'window.writeLog = writeLog;',
+    'window.jb = { mark: writeEvent };',
+    '',
+    'async function run() {',
+    '  writeLog("Credits: Sonic_Iso, Jordy, ntfargo, Dr. Yenyen, TheFlow, Sleirsgoevy, EchoStretch, EarthOnion", "info");',
+    '  writeLog(`Agent: ${navigator.userAgent}`);',
+    '  writeLog(`Firmware: ${window.fw_str}`);',
+    '  const primitive = installWindowP(await establishPrimitive(writeEvent));',
+    '  if (!primitive || typeof primitive.read8 !== "function") throw new Error("Memory primitive unavailable");',
+    '  writeLog("ARW ready", "success");',
+    '  // prepareRop is a global from main.js (classic) — ROP setup only, no kernel exploit',
+    '  const { p, chain } = await prepareRop(primitive);',
+    '  writeLog("ROP chain ready", "success");',
+    '  const loaded = await deliverPayloads(p, chain, (m) => writeLog("payload: " + m));',
+    '  writeLog("payload send finished (" + loaded + ")", loaded ? "success" : "error");',
+    '}',
+    '',
+    'run().catch((e) => writeLog(e instanceof Error && e.stack ? e.stack : String(e), "error"));'
+  ].join("\n");
+
+  var mod = document.createElement('script');
+  mod.type = 'module';
+  mod.textContent = src;
+  document.body.appendChild(mod);
+
+  setTimeout(function () {
+    statusEl.textContent = 'delivery running — see console';
+  }, 400);
 }
 
 function fail(payload, err) {

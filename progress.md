@@ -254,3 +254,11 @@ main.js
   Worker, fwScript offsets, dan import kexp. Loader payloads: hapus load offsets manual
   (main.js fwScript yang handle — hindari double-load/const redeclare). Pola boot kini
   identik dengan direct/index.html native.
+- 2026-11-16: **Fix "importing module script failed" + bypass re-exploit** — dynamic
+  import() di classic context (main.js) tidak reliable di PS5 WebKit; dan main() mode
+  payloads tidak menjalankan kernel exploit (deliverPayloads hanya butuh ROP userland).
+  Solusi: halaman payloads boot inline <script type=module> yang STATIC import
+  webkit.js/mem.js/kexp.js (module resolution terbukti jalan — pola native site.js),
+  tunggu offsets via polling OFFSET global, lalu primitive → prepareRop (ROP setup
+  saja) → deliverPayloads. main() TIDAK dipanggil → tidak ada exploit berjalan ulang.
+  relapse_mode localStorage tidak dipakai lagi (disabled_payloads tetap untuk list).
