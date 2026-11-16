@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache">
+<title>PS5 Payload Menu</title>
+<style>
+*{box-sizing:border-box}
+body{background:#0a0a0c;color:#e8e8ec;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;margin:0;padding:16px;min-height:100vh}
+h1{font-size:1.4em;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin:8px 0 2px;color:#e8e8ec}
+.sub{color:#6b6b78;margin:0 0 16px;font-size:13px;font-weight:normal;line-height:1.5}
+#status{position:-webkit-sticky;position:sticky;top:0;background:rgba(19,19,22,.95);border:1px solid #1e1e24;border-radius:12px;padding:10px 14px;margin-bottom:16px;font-size:13px;min-height:20px;z-index:2;color:#6b6b78}
+#status.err{border-color:#f87171;color:#f87171}
+#list{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:10px}
+a.btn{display:block;width:100%;text-align:left;background:#131316;border:1px solid #1e1e24;border-radius:12px;color:#e8e8ec;padding:14px 16px;cursor:pointer;-webkit-transition:border-color .2s,box-shadow .2s,background .2s,-webkit-transform .1s;transition:border-color .2s,box-shadow .2s,background .2s,transform .1s;font:inherit;text-decoration:none;outline:none}
+a.btn:hover,a.btn:focus{-webkit-transform:translateY(-1px);transform:translateY(-1px);border-color:#7c6aef;background:#16151f;box-shadow:0 0 0 1px #7c6aef,0 4px 24px rgba(124,106,239,.25)}
+a.btn.ctl-focus{-webkit-transform:translateY(-1px);transform:translateY(-1px);border-color:#7c6aef;background:#16151f;box-shadow:0 0 0 1px #7c6aef,0 4px 24px rgba(124,106,239,.25)}
+a.btn:active{-webkit-transform:translateY(0);transform:translateY(0)}
+.t{display:block;font-size:15px;font-weight:600;color:#e8e8ec}
+.d{color:#6b6b78;font-size:13px;margin:5px 0;display:block;line-height:1.4}
+.i{color:#7c6aef;font-size:12px;display:block;opacity:.8}
+.sent{border-color:#34d399!important;box-shadow:0 0 0 1px #34d399,0 4px 24px rgba(52,211,153,.2)!important}
+.err{border-color:#f87171!important}
+.nojs{text-align:center;padding:2em 1.5em;color:#f87171;font-size:1em;line-height:1.6}
+.nojs strong{display:block;font-size:1.2em;margin-bottom:.5em}
+.nojs .path{color:#e8e8ec;font-size:.85em;margin-top:.75em}
+.selfhost-badge{display:inline-block;padding:.3em .8em;border:1px solid #34d399;border-radius:999px;color:#34d399;font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;vertical-align:middle;margin-left:10px}
+.credit{color:#46464f;font-size:11px;letter-spacing:.02em;line-height:1.6;margin:18px 0 8px;text-align:center}
+</style>
+</head>
+<body>
+<noscript>
+  <div class="nojs">
+    <strong>JavaScript is disabled!</strong>
+    Go to Settings &gt; System &gt; Web Browser &gt; Enable JavaScript, then come back.
+    <div class="path">Settings &rarr; System &rarr; Web Browser &rarr; JavaScript &rarr; On</div>
+  </div>
+</noscript>
+<h1>Payloads <span class="selfhost-badge">Self-Host</span></h1>
+<p class="sub">Finish the exploit first (elfldr must be listening on port 9021). Clicking a payload tells the loader on this console to pull it from this server.</p>
+<div id="status">loading payload list…</div>
+<div id="list"></div>
+<p class="credit">Original exploit &amp; payload list by earthonion, soniciso1 &amp; the PS5 scene — self-hosted mirror for personal use.</p>
+<script>
+if (/PlayStation 5\//.test(navigator.userAgent) && location.protocol === 'https:') location.replace('http://' + location.host + location.pathname);
+
+var statusEl = document.getElementById('status');
+var listEl = document.getElementById('list');
+var m = navigator.userAgent.match(/PlayStation 5\/([\d.]+)/);
+var fw = m ? m[1] : null;
+
+fetch('payload_map.js', {cache: 'no-store'})
+  .then(function (r) {
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return r.text();
+  })
+  .then(function (src) {
+    var payload_map = new Function(src + '; return payload_map;')();
+    if (!payload_map) throw new Error('map did not define payload_map');
+
+    var rows = payload_map.filter(function (p) { return p && p.fileName && !p.customAction; })
+      .filter(function (p) { return !p.supportedFirmwares || !fw || p.supportedFirmwares.some(function (x) { return fw.indexOf(x) === 0; }); });
+
+    statusEl.textContent = fw
+      ? ('Firmware ' + fw + ' — ' + rows.length + ' payloads available.')
+      : (rows.length + ' payloads (firmware not detected).');
+    if (!rows.length) statusEl.textContent += ' None match this console.';
+
+    for (var n = 0; n < rows.length; n++) {
+      (function (p) {
+        var b = document.createElement('a');
+        b.className = 'btn';
+        b.href = '#';
+        b.tabIndex = 0;
+        var t = document.createElement('span'); t.className = 't'; t.textContent = p.displayTitle;
+        var d = document.createElement('span'); d.className = 'd'; d.textContent = p.description || '';
+        var i = document.createElement('span'); i.className = 'i';
+        i.textContent = 'v' + p.version + ' · ' + p.author;
+        b.appendChild(t); b.appendChild(d); b.appendChild(i);
+        function send(ev) {
+          if (ev && ev.preventDefault) ev.preventDefault();
+          b.className = 'btn';
+          statusEl.className = '';
+          statusEl.textContent = p.displayTitle + ': sending…';
+          var target = 'http://' + location.host + '/payloads/payloads/' + encodeURIComponent(p.fileName);
+          fetch('http://127.0.0.1:9021/x?uri=' + encodeURIComponent(target),
+                {mode: 'no-cors', cache: 'no-store'})
+            .then(function () {
+              b.className = 'btn sent';
+              statusEl.textContent = p.displayTitle + ': sent — if it does not start, the exploit may not be finished.';
+            })
+            .catch(function (e) {
+              b.className = 'btn err';
+              statusEl.className = 'err';
+              statusEl.textContent = p.displayTitle + ': failed (' + e + ') — run the exploit first.';
+            });
+        }
+        b.addEventListener('click', send);
+        b.addEventListener('keydown', function (ev) { if (ev.key === 'Enter' || ev.key === ' ') send(ev); });
+        listEl.appendChild(b);
+      })(rows[n]);
+    }
+  })
+  .catch(function (e) {
+    statusEl.className = 'err';
+    statusEl.textContent = 'failed to load payload list: ' + e;
+  });
+
+  // Controller/keyboard nav
+  (function () {
+    var idx = -1;
+    function btns() { return Array.prototype.slice.call(document.querySelectorAll('a.btn')); }
+    function show(i) {
+      var bs = btns();
+      if (!bs.length) return;
+      if (i < 0) i = bs.length - 1;
+      if (i >= bs.length) i = 0;
+      idx = i;
+      for (var n = 0; n < bs.length; n++) bs[n].classList.toggle('ctl-focus', n === idx);
+      try { bs[idx].scrollIntoView({block: 'nearest'}); } catch (e) { bs[idx].scrollIntoView(false); }
+    }
+    function gridMove(dir) {
+      var bs = btns();
+      if (!bs.length) return;
+      if (idx < 0) { show(0); return; }
+      var r = bs[idx].getBoundingClientRect();
+      var best = -1, bestScore = 1e9;
+      for (var n = 0; n < bs.length; n++) {
+        var q = bs[n].getBoundingClientRect();
+        var dy = q.top - r.top;
+        if (dir < 0 && dy > -4) continue;
+        if (dir > 0 && dy < 4) continue;
+        var score = Math.abs(q.left - r.left) + Math.abs(dy) * 0.1;
+        if (score < bestScore) { bestScore = score; best = n; }
+      }
+      if (best >= 0) show(best); else show(idx + dir);
+    }
+    function activate() { var bs = btns(); if (idx >= 0 && bs[idx]) bs[idx].click(); }
+    function back() { location.href = "/relapse-menu/"; }
+    document.addEventListener('keydown', function (ev) {
+      if (ev.key === 'ArrowDown') { gridMove(1); ev.preventDefault(); }
+      else if (ev.key === 'ArrowUp') { gridMove(-1); ev.preventDefault(); }
+      else if (ev.key === 'ArrowRight') { show(idx + 1); ev.preventDefault(); }
+      else if (ev.key === 'ArrowLeft') { show(idx - 1); ev.preventDefault(); }
+      else if (ev.key === 'Enter' && idx >= 0) { ev.preventDefault(); activate(); }
+      else if (ev.key === 'Backspace' || ev.key === 'Escape' || ev.key === 'Esc') { ev.preventDefault(); back(); }
+    });
+    var last = {};
+    setInterval(function () {
+      if (!navigator.getGamepads) return;
+      var gps = navigator.getGamepads();
+      for (var g = 0; g < gps.length; g++) {
+        var gp = gps[g]; if (!gp) continue;
+        var now = Date.now();
+        var pressed = function (i) { return gp.buttons[i] && gp.buttons[i].pressed; };
+        function once(name, fn) { if (!last[name] || now - last[name] > 220) { last[name] = now; fn(); } }
+        if (pressed(13)) once('d', function () { gridMove(1); });
+        if (pressed(12)) once('u', function () { gridMove(-1); });
+        if (pressed(15)) once('r', function () { show(idx + 1); });
+        if (pressed(14)) once('l', function () { show(idx - 1); });
+        if (pressed(0)) once('x', activate);
+        if (pressed(1)) once('o', back);
+      }
+    }, 60);
+  })();
+</script>
+</body>
+</html>
