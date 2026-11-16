@@ -167,6 +167,14 @@ main.js
 
 ## Progress
 
+- 2026-11-16: **Repo GitHub** — push ke https://github.com/maldinipunisher/Relapse
+  (user: maldinipunisher). Deployment Pages lama (v3–v5: index.html, offsets/, src/,
+  payloads/) dihapus dari repo per instruksi "timpa semua" — file tetap ada di disk lokal
+  sebagai cadangan (untracked). `certs/` di-gitignore sejak awal (key TLS tidak pernah
+  masuk history). Isi repo final: README.md, server.py, site/, tools/, progress.md.
+  Catatan: kalau GitHub Pages repo ini masih aktif, sekarang tidak ada index.html di root
+  → Pages 404; aktifkan kembali dengan meng-commit ulang file legacy bila mau restore.
+
 - 2026-11-16: Initial inspect (menu, payloads, wobkot chain) selesai; semua JS + binary
   PS5 di-clone ke `site/`; analisis tahap-1 (relapse.js, impl.js, struktur) didokumentasikan di atas.
 - 2026-11-16: `server.py` dibuat (HTTP:80 + HTTPS:443 self-signed auto-gen); nanodns.elf
