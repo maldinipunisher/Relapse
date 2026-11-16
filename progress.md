@@ -270,3 +270,5 @@ main.js
   payloads: hapus builder disabled-map & set disabled_payloads (dikosongkan utk kebersihan),
   module inline kini import deliverOne dan target = payload.fileName via
   window.__deliver_target. deliverPayloads tetap untuk direct/ native UI (checkbox).
+- 2026-11-16: deliverOne() live-verified di Pages (export ada, dipakai payloads,
+  builder disabled-map 0). Commit 8345b10. Menunggu tes PS5: 1 klik = 1 payload.
