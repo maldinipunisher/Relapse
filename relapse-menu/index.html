@@ -177,12 +177,17 @@
   var tag = document.getElementById('tagline');
   var jailbroken = null;
   var isPS5 = /PlayStation 5\//.test(navigator.userAgent);
+  // On https (github.io) the loader probe is blocked by mixed-content policy,
+  // so we can't detect jailbreak state — never gate navigation there.
+  var isPages = location.hostname.indexOf('github.io') !== -1;
 
   if (!isPS5) {
     st.textContent = 'preview mode — loader check skipped';
+  } else if (isPages) {
+    st.textContent = 'https host — loader check unavailable';
   }
 
-  if (isPS5) fetch('http://127.0.0.1:9021/', {mode: 'no-cors', cache: 'no-store'})
+  if (isPS5 && !isPages) fetch('http://127.0.0.1:9021/', {mode: 'no-cors', cache: 'no-store'})
     .then(function () {
       jailbroken = true;
       tag.textContent = 'Now play has no limits.';
@@ -196,7 +201,7 @@
     });
 
   jb.addEventListener('click', function (ev) {
-    if (isPS5 && jailbroken === true) {
+    if (isPS5 && !isPages && jailbroken === true) {
       ev.preventDefault();
       st.textContent = 'already jailbroken — pick a payload';
       st.className = 'ok';
@@ -204,7 +209,7 @@
     }
   });
   pl.addEventListener('click', function (ev) {
-    if (isPS5 && jailbroken === false) {
+    if (isPS5 && !isPages && jailbroken === false) {
       ev.preventDefault();
       st.textContent = 'jailbreak first';
       st.className = '';

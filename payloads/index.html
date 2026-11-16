@@ -94,7 +94,11 @@ fetch('payload_map.js', {cache: 'no-store'})
             .catch(function (e) {
               b.className = 'btn err';
               statusEl.className = 'err';
-              statusEl.textContent = p.displayTitle + ': failed (' + e + ') — run the exploit first.';
+              if (location.protocol === 'https:') {
+                statusEl.textContent = p.displayTitle + ': https page cannot reach 127.0.0.1:9021 (mixed content) — send payloads from the local server (http) instead.';
+              } else {
+                statusEl.textContent = p.displayTitle + ': failed (' + e + ') — run the exploit first.';
+              }
             });
         }
         b.addEventListener('click', send);

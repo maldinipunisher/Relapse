@@ -219,3 +219,9 @@ main.js
   hanya di host non-github.io (server lokal). Di Pages, halaman tetap https; trade-off:
   auto-detect loader via fetch 127.0.0.1:9021 bisa diblok mixed content tergantung FW
   PS5 — tombol jailbreak/payload tetap berfungsi normal.
+- 2026-11-16: **Fix tombol Payloads terkunci di Pages** — probe loader diblok mixed-content
+  → jailbroken=false → klik Payloads di-prevent. Di github.io gating dimatikan sepenuhnya
+  (isPages): klik selalu lewat, status "https host — loader check unavailable". Halaman
+  payloads: pesan error jujur saat https (mixed content → pakai server lokal untuk kirim).
+  Realita: pengiriman ELF ke elfldr (127.0.0.1:9021) dari halaman https memang tidak bisa;
+  untuk kirim payload tetap pakai http server lokal Mac. Pages = jailbreak + browse; lokal = full.
