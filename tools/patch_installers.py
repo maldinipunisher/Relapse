@@ -42,6 +42,12 @@ TARGETS = [
     },
 ]
 
+# Base URL self-host. Default: GitHub Pages (HTTPS valid, tidak butuh Mac online).
+# Override: python3 patch_installers.py [base_url_atau_IP]
+#   contoh: python3 patch_installers.py 192.168.100.10          → IP lokal (port 80)
+#           python3 patch_installers.py https://foo.github.io/X → base URL lain
+DEFAULT_BASE = "https://maldinipunisher.github.io/Relapse"
+
 
 def get_local_ip():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -79,8 +85,13 @@ def patch(fname, old_uri, new_uri, old_tid, new_tid):
 
 
 def main():
-    ip = sys.argv[1] if len(sys.argv) > 1 else get_local_ip()
-    print(f"[*] Self-host IP: {ip} (port 80 — server.py default)")
+    arg = sys.argv[1] if len(sys.argv) > 1 else None
+    if arg:
+        # argumen: IP (→ http://ip:80) atau URL lengkap (https://...)
+        base = f"http://{arg}" if re.match(r'^[\d.]+$', arg) else arg.rstrip("/")
+    else:
+        base = DEFAULT_BASE
+    print(f"[*] Self-host base: {base}")
     for t in TARGETS:
         src = os.path.join(PAYLOAD_DIR, t["src"])
         if not os.path.exists(src):
@@ -89,11 +100,11 @@ def main():
         patch(
             src,
             t["old_uri"],
-            f"http://{ip}{t['path']}",
+            base + t["path"],
             t["old_tid"],
             t["new_tid"],
         )
-    print("[i] Catatan: URI ter-bake ke IP ini. Kalau IP Mac berubah, jalankan ulang script ini.")
+    print("[i] URI ter-bake ke base ini. Base berubah → jalankan ulang script ini.")
 
 
 if __name__ == "__main__":
