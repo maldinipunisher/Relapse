@@ -207,3 +207,9 @@ main.js
   (range request OK). Catatan: API pages/builds/latest balik 404 terus (quirk legacy build)
   — pantau via HTTP check langsung, bukan API. 404 sebelumnya = build legacy belum selesai
   (repo ~200MB, build makan waktu beberapa menit) + cache CDN edge.
+- 2026-11-16: **Fix navigasi Pages** — link absolut (/wobkot/, /payloads/, /relapse-menu/,
+  target ELF `/payloads/payloads/...`) rusak di Pages karena situs di-host di subpath
+  /Relapse/. Semua diganti path relatif (../wobkot/, ../payloads/, ELF target pakai
+  location.pathname.replace) sehingga bekerja di server lokal (root /) DAN Pages (/Relapse/).
+  Salinan root Pages disinkronkan. Verified resolve: ../wobkot/ → /Relapse/wobkot/,
+  ELF target → /Relapse/payloads/payloads/<file>.

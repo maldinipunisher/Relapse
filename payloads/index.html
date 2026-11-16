@@ -83,7 +83,7 @@ fetch('payload_map.js', {cache: 'no-store'})
           b.className = 'btn';
           statusEl.className = '';
           statusEl.textContent = p.displayTitle + ': sending…';
-          var target = 'http://' + location.host + '/payloads/payloads/' + encodeURIComponent(p.fileName);
+          var target = 'http://' + location.host + location.pathname.replace(/\/[^/]*$/, '/') + 'payloads/' + encodeURIComponent(p.fileName);
           fetch('http://127.0.0.1:9021/x?uri=' + encodeURIComponent(target),
                 {mode: 'no-cors', cache: 'no-store'})
             .then(function () {
@@ -137,7 +137,7 @@ fetch('payload_map.js', {cache: 'no-store'})
       if (best >= 0) show(best); else show(idx + dir);
     }
     function activate() { var bs = btns(); if (idx >= 0 && bs[idx]) bs[idx].click(); }
-    function back() { location.href = "/relapse-menu/"; }
+    function back() { location.href = "../relapse-menu/"; }
     document.addEventListener('keydown', function (ev) {
       if (ev.key === 'ArrowDown') { gridMove(1); ev.preventDefault(); }
       else if (ev.key === 'ArrowUp') { gridMove(-1); ev.preventDefault(); }
