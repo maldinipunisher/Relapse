@@ -196,3 +196,8 @@ main.js
   relapse-direct-install.elf dipatch equal-length ke IP Mac (192.168.100.10), titleId baru
   RLPS10011/10012; tools/patch_installers.py dibuat (re-runnable bila IP berubah);
   keduanya didaftarkan di local_payloads.js (49 entri) & verified 200.
+- 2026-11-16: **GitHub Pages aktif lagi** — site/ di-deploy sebagai root repo
+  (https://maldinipunisher.github.io/Relapse). Badge Self-Host + credit tampil live
+  (verified HTTP 200, badge 2x di /relapse-menu/). Payload legacy v3-v5 tetap dihapus
+  dari repo (untracked di disk); .nojekyll dikembalikan. Pages = HTTPS valid, cocok
+  untuk PS5 tanpa self-signed warning; server.py lokal tetap untuk dev/testing.
